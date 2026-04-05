@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+
+# Local DB (자동 생성됨)
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# 원본 청구마감 파일 (민감 데이터)
+org/
+*.xlsx
+!sample/*.xlsx
+
+# Streamlit
+.streamlit/secrets.toml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp

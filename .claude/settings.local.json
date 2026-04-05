@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c ':*)",
+      "Bash(python3)",
+      "Bash(pip install:*)",
+      "Bash(taskkill //F //IM python.exe)",
+      "Bash(python3 -c \"import streamlit, plotly; print\\('streamlit', streamlit.__version__\\); print\\('plotly', plotly.__version__\\)\")",
+      "Bash(rm -f data/billing.db)",
+      "Bash(where gh:*)"
+    ]
+  }
+}
