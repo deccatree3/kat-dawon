@@ -14,6 +14,7 @@ import streamlit as st
 
 from src.analysis import (
     audit_sheets,
+    build_correction_report,
     detect_anomalies,
     previous_year_month,
     storage_comparison,
@@ -29,7 +30,7 @@ from src.db import (
     get_issues,
 )
 from src.ingest import ingest_file
-from src.report import build_report_bytes
+from src.report import build_report_bytes, build_correction_xlsx_bytes
 from src.validator import issue_label
 
 
@@ -206,6 +207,61 @@ if True:
             "%": st.column_config.NumberColumn("%", format="%+.1f%%"),
         },
     )
+
+    # ── 🧾 물류센터 정정 요청 (제출용) ────────────────────────────────
+    st.markdown("### 🧾 물류센터 정정 요청 (제출용)")
+    with get_conn() as conn:
+        corr = build_correction_report(conn, company, ym)
+    ct = corr["totals"]
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("확정 정정", f"{ct.get('confirmed_cnt', 0)}건")
+    c2.metric("의심(확인요청)", f"{ct.get('suspected_cnt', 0)}건")
+    c3.metric("환급 요청 합계", f"{ct.get('refund', 0):,.0f}원",
+              help="과다·중복 청구 — 물류센터에 환급 요청")
+    c4.metric("부족·누락 정정", f"{ct.get('shortfall', 0):,.0f}원",
+              help="과소·누락 청구 — 정정 시 추가 발생(인지 필요)")
+
+    _num = lambda lbl: st.column_config.NumberColumn(lbl, format="%,.0f원")
+    if corr["confirmed"]:
+        st.markdown("**① 확정 정정 요청** — 정상 청구액이 명확히 산출되는 건")
+        conf_df = pd.DataFrame([{
+            "항목": x["item"], "결론": x["conclusion"],
+            "실제 청구액": x["billed"], "정상 청구액": x["normal"],
+            "차액(정정금액)": x["diff"], "구분": x["direction"],
+            "요약셀": x["cell"], "근거": x["basis"],
+        } for x in corr["confirmed"]])
+        st.dataframe(
+            conf_df, use_container_width=True, hide_index=True,
+            column_config={
+                "실제 청구액": _num("실제 청구액"),
+                "정상 청구액": _num("정상 청구액"),
+                "차액(정정금액)": st.column_config.NumberColumn(
+                    "차액(정정금액)", format="%+,.0f원"),
+            },
+        )
+    else:
+        st.success("✅ 확정 정정 대상 없음")
+
+    if corr["suspected"]:
+        st.markdown("**② 확인 요청 (의심)** — 추세 불일치 등, 물류센터 확인 필요")
+        susp_df = pd.DataFrame([{
+            "항목": x["item"], "결론/사유": x["conclusion"],
+            "실제 청구액": x["billed"], "요약셀": x["cell"], "근거": x["basis"],
+        } for x in corr["suspected"]])
+        st.dataframe(
+            susp_df, use_container_width=True, hide_index=True,
+            column_config={"실제 청구액": _num("실제 청구액")},
+        )
+
+    if corr["confirmed"] or corr["suspected"]:
+        with get_conn() as conn:
+            corr_xlsx = build_correction_xlsx_bytes(conn, doc_id)
+        st.download_button(
+            "⬇ 정정 요청서 엑셀 다운로드 (물류센터 제출용)",
+            data=corr_xlsx,
+            file_name=f"{company}_{ym}_정정요청서.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
 
     # ── 1. 단순 오류 검출 ────────────────────────────────────────────
     st.markdown("### 1. 오류 검출")

@@ -7,6 +7,7 @@ import sqlite3
 import pandas as pd
 
 from .analysis import (
+    build_correction_report,
     compare_documents,
     comparison_dataframe,
     detect_anomalies,
@@ -153,4 +154,49 @@ def build_report_bytes(conn: sqlite3.Connection, doc_id: int) -> bytes:
             anomaly_df.to_excel(writer, sheet_name="이상항목", index=False)
         if not storage_df.empty:
             storage_df.to_excel(writer, sheet_name="보관비분석", index=False)
+    return buffer.getvalue()
+
+
+def build_correction_xlsx_bytes(conn: sqlite3.Connection, doc_id: int) -> bytes:
+    """물류센터 제출용 정정 요청서 엑셀 (확정/의심 2시트 + 요약)."""
+    doc = get_document(conn, doc_id)
+    if doc is None:
+        raise ValueError(f"document {doc_id} not found")
+    rep = build_correction_report(conn, doc["company"], doc["year_month"])
+
+    def _df(rows: list[dict], confirmed: bool) -> pd.DataFrame:
+        recs = []
+        for x in rows:
+            rec = {
+                "항목": x["item"],
+                "결론": x["conclusion"],
+                "실제 청구액": x["billed"],
+                "정상 청구액": x["normal"],
+                "차액(정정금액)": x["diff"],
+                "구분": x.get("direction", "확인 요청"),
+                "요약시트 셀": x["cell"],
+                "근거": x["basis"],
+            }
+            recs.append(rec)
+        cols = ["항목", "결론", "실제 청구액", "정상 청구액",
+                "차액(정정금액)", "구분", "요약시트 셀", "근거"]
+        return pd.DataFrame(recs, columns=cols)
+
+    t = rep["totals"]
+    summary_df = pd.DataFrame([
+        {"항목": "화주사", "값": rep["company"]},
+        {"항목": "대상 월", "값": rep["year_month"]},
+        {"항목": "확정 정정 건수", "값": t.get("confirmed_cnt", 0)},
+        {"항목": "의심(확인요청) 건수", "값": t.get("suspected_cnt", 0)},
+        {"항목": "환급 요청 합계(원)", "값": round(t.get("refund", 0))},
+        {"항목": "부족·누락 정정 합계(원)", "값": round(t.get("shortfall", 0))},
+    ])
+
+    buffer = io.BytesIO()
+    with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
+        summary_df.to_excel(writer, sheet_name="요약", index=False)
+        _df(rep["confirmed"], True).to_excel(
+            writer, sheet_name="확정 정정요청", index=False)
+        _df(rep["suspected"], False).to_excel(
+            writer, sheet_name="의심 확인요청", index=False)
     return buffer.getvalue()

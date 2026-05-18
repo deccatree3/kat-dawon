@@ -1070,3 +1070,127 @@ def audit_sheets(conn: sqlite3.Connection, doc_id: int) -> list[SheetAudit]:
             ))
 
     return audits
+
+
+# ---------------------------------------------------------------------------
+# 물류센터 제출용 정정 요청서 — 잘못 청구된 내역을 한 곳에 모아 구체적으로 제시
+# ---------------------------------------------------------------------------
+def _plain(text: Optional[str]) -> str:
+    """마크다운(**, 머리표, 줄바꿈)을 제거해 한 줄 평문으로."""
+    if not text:
+        return ""
+    t = str(text).replace("**", "").replace("  \n", " ").replace("\n", " ")
+    t = t.replace("- ", " ").strip()
+    while "  " in t:
+        t = t.replace("  ", " ")
+    return t
+
+
+def _headline(a: "SheetAudit") -> str:
+    """audit에서 결론 한 줄만 추출 (산출식·요약 청구 상세 앞부분)."""
+    if a.verdict_short:
+        return _plain(a.verdict_short)
+    t = _plain(a.description)
+    for stop in ("산출식", "요약시트 청구", "요약 청구"):
+        i = t.find(stop)
+        if i > 8:
+            return t[:i].strip(" -—·")
+    return t[:120]
+
+
+def build_correction_report(
+    conn: sqlite3.Connection, company: str, year_month: str
+) -> dict:
+    """청구마감 분석 결과에서 '잘못 청구된 내역'만 추려 물류센터 제출용 구조로 반환.
+
+    Returns: {
+      'company','year_month',
+      'confirmed': [ {item,billed,normal,diff,direction,conclusion,basis,cell}, ... ],  # 확정
+      'suspected': [ {item,billed,normal,diff,conclusion,basis,cell}, ... ],            # 의심(확인 요청)
+      'totals': {'refund': 환급요청합계, 'shortfall': 부족·누락 정정합계,
+                 'confirmed_cnt','suspected_cnt'}
+    }
+    direction: diff>0 → '환급 요청'(회사 과다부담), diff<0 → '정정 필요'(과소청구·누락)
+    """
+    doc = conn.execute(
+        "SELECT id FROM billing_document WHERE company=? AND year_month=?",
+        (company, year_month),
+    ).fetchone()
+    if doc is None:
+        return {"company": company, "year_month": year_month,
+                "confirmed": [], "suspected": [], "totals": {}}
+    doc_id = doc["id"] if isinstance(doc, sqlite3.Row) else doc[0]
+
+    rows = summary_with_comparison(conn, company, year_month)
+    audits = audit_sheets(conn, doc_id)
+
+    confirmed: list[dict] = []
+    suspected: list[dict] = []
+    used_cells: set[str] = set()
+
+    # 1) 시트 audit — error→확정 / warning→의심 (ok·info는 제외)
+    for a in audits:
+        if a.target_cell:
+            used_cells.add(a.target_cell)
+        if a.severity not in ("error", "warning"):
+            continue
+        if a.expected is None or a.actual is None:
+            # 금액 비구조 audit(예: 정석 위반) — 의심(확인 요청)으로
+            suspected.append({
+                "item": a.name, "billed": None, "normal": None, "diff": None,
+                "conclusion": _headline(a),
+                "basis": _plain(a.description), "cell": a.target_cell or "",
+            })
+            continue
+        diff = a.actual - a.expected
+        rec = {
+            "item": a.name,
+            "billed": a.actual,
+            "normal": a.expected,
+            "diff": diff,
+            "direction": "환급 요청" if diff > 0 else "정정 필요",
+            "conclusion": _headline(a),
+            "basis": _plain(a.description),
+            "cell": a.target_cell or "",
+        }
+        (confirmed if a.severity == "error" else suspected).append(rec)
+
+    # 2) 시트 audit이 못 잡는 요약 단계 오류 — 중복청구(정상 0) 확정 / 그 외 추세는 의심
+    for r in rows:
+        if r.severity not in ("error", "warning"):
+            continue
+        cell = f"G{r.row_index}"
+        if cell in used_cells:
+            continue
+        j = r.judgment or ""
+        if r.severity == "error" and (r.curr_amount or 0) and (
+            "중복 청구" in j or "정상 청구 0" in j
+        ):
+            billed = float(r.curr_amount or 0)
+            confirmed.append({
+                "item": r.item_name, "billed": billed, "normal": 0.0,
+                "diff": billed, "direction": "환급 요청",
+                "conclusion": _plain(j)[:140], "basis": _plain(j), "cell": cell,
+            })
+        else:
+            suspected.append({
+                "item": r.item_name, "billed": r.curr_amount, "normal": None,
+                "diff": None, "conclusion": _plain(j)[:140],
+                "basis": _plain(j), "cell": cell,
+            })
+        used_cells.add(cell)
+
+    refund = sum(x["diff"] for x in confirmed if x["diff"] and x["diff"] > 0)
+    shortfall = sum(-x["diff"] for x in confirmed if x["diff"] and x["diff"] < 0)
+    return {
+        "company": company,
+        "year_month": year_month,
+        "confirmed": confirmed,
+        "suspected": suspected,
+        "totals": {
+            "refund": refund,
+            "shortfall": shortfall,
+            "confirmed_cnt": len(confirmed),
+            "suspected_cnt": len(suspected),
+        },
+    }
