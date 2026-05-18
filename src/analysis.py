@@ -662,6 +662,13 @@ def summary_with_comparison(
             # 그 외 시트 audit은 더 심각한 등급일 때만 덮어씀
             sev = a.severity
             judg = a.description
+
+        # 보관비(PLT): 비교표 단순 판단은 무의미 — 별도 PLT/LOC 분석(3번 섹션)이 본 판단.
+        # 네뉴·캐처스 공통, _judge_row·audit 결과와 무관하게 안내 문구로 고정.
+        if cat == "보관비" and name == "PLT":
+            sev = "info"
+            judg = "별도 분석 필요"
+
         display = _RENAME_LOOKUP.get((cat, name, occ), name)
 
         out.append(SummaryRow(
