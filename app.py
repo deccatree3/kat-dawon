@@ -138,6 +138,25 @@ docs_df = pd.DataFrame(docs)
 
 
 # -----------------------------------------------------------------------------
+# 사이드바 — 화주사 선택 (메인 네비게이션)
+# -----------------------------------------------------------------------------
+_PREFERRED_ORDER = ["네이처뉴트리션", "캐처스"]
+_present = set(docs_df["company"])
+_companies = [c for c in _PREFERRED_ORDER if c in _present]
+_companies += [c for c in sorted(_present) if c not in _companies]
+
+with st.sidebar:
+    st.divider()
+    st.header("🏢 화주사")
+    company = st.radio(
+        "분석할 화주사를 선택하세요",
+        _companies,
+        key="nav_company",
+        label_visibility="collapsed",
+    )
+
+
+# -----------------------------------------------------------------------------
 # 유틸
 # -----------------------------------------------------------------------------
 def severity_emoji(sev: str) -> str:
@@ -148,9 +167,12 @@ def severity_emoji(sev: str) -> str:
 # 페이지 — 종합 검수 리포트 (단일 페이지)
 # -----------------------------------------------------------------------------
 if True:
-    company = st.selectbox("업체 선택", sorted(docs_df["company"].unique()), key="rpt_co")
+    # 화주사는 좌측 사이드바에서 선택 (네이처뉴트리션 / 캐처스)
     sub = docs_df[docs_df["company"] == company].sort_values("year_month", ascending=False)
-    ym = st.selectbox("년월 선택", sub["year_month"].tolist(), key="rpt_ym")
+    if sub.empty:
+        st.warning(f"{company} 적재된 청구마감 데이터가 없습니다. 사이드바에서 업로드하세요.")
+        st.stop()
+    ym = st.selectbox("년월 선택", sub["year_month"].tolist(), key=f"rpt_ym_{company}")
     doc_row = sub[sub["year_month"] == ym].iloc[0]
     doc_id = int(doc_row["id"])
     prev_ym = previous_year_month(ym)
