@@ -30,6 +30,7 @@ from src.db import (
 )
 from src.ingest import ingest_file
 from src.report import build_report_bytes
+from src.validator import issue_label
 
 
 # -----------------------------------------------------------------------------
@@ -261,7 +262,8 @@ if True:
             continue
         sev_map = {"critical": "error", "warning": "warning", "info": "warning"}
         sev = sev_map.get(issue["severity"], "warning")
-        title = f"[{itype}] {issue['item_name'] or ''}".strip()
+        _nm = issue["item_name"] or ""
+        title = issue_label(itype) + (f" — {_nm}" if _nm else "")
         detail = issue["description"] or ""
         extras = []
         if issue["expected_value"] is not None:

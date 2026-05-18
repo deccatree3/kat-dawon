@@ -14,6 +14,7 @@ from .analysis import (
     storage_comparison,
 )
 from .db import get_document, get_issues, get_items
+from .validator import issue_label
 
 
 def build_report_bytes(conn: sqlite3.Connection, doc_id: int) -> bytes:
@@ -67,6 +68,7 @@ def build_report_bytes(conn: sqlite3.Connection, doc_id: int) -> bytes:
 
     issues_df = pd.DataFrame(issues)
     if not issues_df.empty:
+        issues_df["issue_type"] = issues_df["issue_type"].map(issue_label)
         issues_df = issues_df[
             [
                 "severity",

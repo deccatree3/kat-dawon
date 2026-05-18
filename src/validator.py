@@ -21,6 +21,24 @@ from .parser import ParsedDocument, ParsedItem
 CELL_REF_RE = re.compile(r"'?([^'!=+\-*/,()\s]+)'?!([A-Z]+)(\d+)")
 
 
+# 내부 검증 코드 → 사용자가 바로 이해할 수 있는 한글 설명 (앱·리포트 공용)
+ISSUE_TYPE_LABELS = {
+    "supply_sum_mismatch": "항목 합계 ≠ 공급가",
+    "vat_mismatch": "VAT(부가세) 금액 불일치",
+    "total_mismatch": "청구총액 ≠ 공급가×1.1",
+    "formula_row_mismatch": "수식 오참조 — 수량·금액이 서로 다른 행을 참조",
+    "duplicate_reference": "같은 셀 중복 참조 — 이중 청구 의심",
+    "qty_unit_amount_mismatch": "수량×단가와 금액이 맞지 않음",
+    "suspicious_duplicate_amount": "다른 항목이 같은 금액 — 이중 청구 의심",
+    "qty_positive_amount_zero": "수량은 있는데 금액이 0원",
+}
+
+
+def issue_label(itype: str) -> str:
+    """내부 issue_type 코드를 사용자용 한글 문구로 변환 (미정의 코드는 그대로)."""
+    return ISSUE_TYPE_LABELS.get(itype, itype)
+
+
 def _col_letter_to_index(letters: str) -> int:
     n = 0
     for ch in letters:
