@@ -8,6 +8,7 @@ import pandas as pd
 
 from .analysis import (
     build_correction_report,
+    build_inspection_report,
     compare_documents,
     comparison_dataframe,
     detect_anomalies,
@@ -192,9 +193,18 @@ def build_correction_xlsx_bytes(conn: sqlite3.Connection, doc_id: int) -> bytes:
         {"항목": "부족·누락 정정 합계(원)", "값": round(t.get("shortfall", 0))},
     ])
 
+    insp = build_inspection_report(conn, doc["company"], doc["year_month"])
+    insp_df = pd.DataFrame([{
+        "중요도": x["중요도"], "항목": x["item"], "카테고리": x["category"],
+        "비중(%)": round(x["비중"] * 100, 1),
+        "판단기준": x["기준"], "결과": x["결과"],
+    } for x in insp], columns=["중요도", "항목", "카테고리", "비중(%)",
+                                "판단기준", "결과"])
+
     buffer = io.BytesIO()
     with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
         summary_df.to_excel(writer, sheet_name="요약", index=False)
+        insp_df.to_excel(writer, sheet_name="검수기준표", index=False)
         _df(rep["confirmed"], True).to_excel(
             writer, sheet_name="확정 정정요청", index=False)
         _df(rep["suspected"], False).to_excel(

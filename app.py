@@ -15,6 +15,7 @@ import streamlit as st
 from src.analysis import (
     audit_sheets,
     build_correction_report,
+    build_inspection_report,
     detect_anomalies,
     previous_year_month,
     storage_comparison,
@@ -262,6 +263,32 @@ if True:
             file_name=f"{company}_{ym}_정정요청서.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
+
+    # ── 📋 검수 기준표 (항목별 자동 판정) ──────────────────────────────
+    st.markdown("### 📋 검수 기준표 (항목별 자동 판정)")
+    with get_conn() as conn:
+        insp = build_inspection_report(conn, company, ym)
+    insp_df = pd.DataFrame([{
+        "중요도": x["중요도"], "항목": x["item"], "카테고리": x["category"],
+        "비중": f'{x["비중"]*100:.1f}%', "판단기준": x["기준"], "결과": x["결과"],
+    } for x in insp])
+
+    def _hl(row):
+        sv = insp[row.name]["severity"]
+        bg = {"error": "background-color:#fdecea",
+              "warning": "background-color:#fef7e6",
+              "info": "background-color:#eef3fb"}.get(sv, "")
+        return [bg] * len(row)
+
+    st.dataframe(
+        insp_df.style.apply(_hl, axis=1),
+        use_container_width=True, hide_index=True,
+    )
+    st.caption(
+        "중요도 '상' 우선·비중 큰 순 정렬. 결과는 검수기준(요약시트 R:V)을 "
+        "코드화한 자동 판정 — 🚨 오류 / ⚠️ 확인 필요 / ℹ️ 별도분석 / ✅ 정상. "
+        "보관비는 '3. 세부 검증' PLT 분석 참조."
+    )
 
     # ── 1. 단순 오류 검출 ────────────────────────────────────────────
     st.markdown("### 1. 오류 검출")

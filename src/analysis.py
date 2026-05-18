@@ -1195,3 +1195,84 @@ def build_correction_report(
             "suspected_cnt": len(suspected),
         },
     }
+
+
+# ---------------------------------------------------------------------------
+# 검수 기준 자동 검수표 — 네뉴 요약시트 R:V 검수기준을 코드화
+#   각 항목의 판단기준(U)을 룰로 매핑, 결과(V)를 표준 양식으로 자동 산출
+# ---------------------------------------------------------------------------
+# 중요도 '상' 항목 (그 외 전부 '하')
+_CRITERIA_HIGH = {
+    "보관비", "BTOC 택배비", "포장비", "BTOB 번들작업비", "BTOB 출고비(박스)",
+}
+# 항목별 판단기준 요약 (display item_name 기준; 미정의는 기본 문구)
+_CRITERIA_BASIS = {
+    "보관비": "보관비 시트 G합계×18,000원 재산정 후 청구와 비교",
+    "WMS 이용료": "전월과 동일하면 정상",
+    "BTOC 택배비": "택배발송내역(확장주문검색) 유효 송장수와 청구수량 비교",
+    "BTOC 추가 택배비": "발생 시 오류(중복) — BTOC택배비에 포함, 정상 0원",
+    "포장비": "BTOC택배비 추이와 유사하면 정상",
+    "BTOB 번들작업비": "btoc번들=raw 동일 + 나머지(btob번들) 추이가 BTOC 유사",
+    "BTOB 출고비(박스)": "확장주문검색 BTOB출고비 내역+입수량 정산박스수와 비교",
+    "BTOB 출고비(팔레트)": "거의 없음 — 운영자 인지 내역과 일치하면 pass",
+    "임가공": "거의 없음 — 운영자 인지 내역과 일치하면 pass",
+    "반품택배": "운영자 판단 — 전월 대비 큰 차이 없으면 pass",
+    "반품 작업비": "운영자 판단 — 전월 대비 큰 차이 없으면 pass",
+    "입고비(팔레트)": "운영자 인지 내역과 일치하면 pass",
+    "팔레트 사용비": "보관료 추이와 유사하면 정상",
+    "팔레트 이동비": "당월 밀크런 팔레트수 총합과 일치하면 정상",
+    "택배 착불비": "운영자 판단 — 전월 대비 큰 차이 없으면 pass",
+    "택배반품": "운영자 판단 — 전월 대비 큰 차이 없으면 pass",
+    "다원박스사용": "내역 없으면 정상",
+    "용차 비용": "운영자 판단 — 전월 대비 큰 차이 없으면 pass",
+}
+_CRITERIA_BASIS_DEFAULT = "BTOC택배비 추이와 유사하면 정상 (부자재류)"
+
+
+def _result_label(sev: str, judg: str, curr_amt, diff) -> str:
+    """검수 결과(V열)를 표준 양식 한 줄로."""
+    j = (judg or "").replace("\n", " ").strip()
+    while "  " in j:
+        j = j.replace("  ", " ")
+    if sev == "ok":
+        return "정상 ✅"
+    if sev == "info":
+        return f"ℹ️ {j or '별도 분석 필요'}"
+    if sev == "na":
+        return "해당없음 ✅"
+    head = j[:90]
+    if sev == "error":
+        if "중복" in j:
+            return f"🚨 중복 청구 {curr_amt or 0:,.0f}원 → 정정요청 (정상 0원)"
+        return f"🚨 {head}"
+    # warning
+    return f"⚠️ 확인 필요 — {head}"
+
+
+def build_inspection_report(
+    conn: sqlite3.Connection, company: str, year_month: str
+) -> list[dict]:
+    """검수기준표(자동): 항목별 비중·중요도·판단기준·결과.
+
+    Returns: [{item,category,비중,중요도,기준,결과,severity}, ...]
+             중요도 '상' 먼저, 같은 등급 내 비중 큰 순.
+    """
+    rows = summary_with_comparison(conn, company, year_month)
+    total = sum(abs(r.curr_amount or 0) for r in rows) or 1.0
+    out: list[dict] = []
+    for r in rows:
+        nm = r.item_name or ""
+        imp = "상" if nm in _CRITERIA_HIGH else "하"
+        basis = _CRITERIA_BASIS.get(nm, _CRITERIA_BASIS_DEFAULT)
+        out.append({
+            "item": nm,
+            "category": r.category or "",
+            "비중": (abs(r.curr_amount or 0) / total),
+            "중요도": imp,
+            "기준": basis,
+            "결과": _result_label(r.severity, r.judgment,
+                                  r.curr_amount, r.amount_diff),
+            "severity": r.severity,
+        })
+    out.sort(key=lambda x: (0 if x["중요도"] == "상" else 1, -x["비중"]))
+    return out
