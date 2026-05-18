@@ -55,10 +55,10 @@ with st.sidebar:
         type=["xlsx", "xls"],
         accept_multiple_files=True,
         help=(
-            "함께 올리면 자동 분류됩니다:\n"
+            "함께 올리면 파일명 키워드로 자동 분류됩니다:\n"
             "- 청구마감(.xlsx)\n"
-            "- 확장주문검색(.xls): BTOB 박스 검증\n"
-            "- 확장주문검색 ... 번들작업 검수용(.xls): BTOC 번들 검증\n"
+            "- 확장주문검색 …BTOB출고비 내역(.xls): BTOB 박스 검증\n"
+            "- 확장주문검색 …BTOC번들작업 내역(.xls): BTOC 번들 검증\n"
             "- 쿠팡 재고이동건(.xlsx): BTOB 번들 검증"
         ),
     )
@@ -72,8 +72,8 @@ with st.sidebar:
 
         # 2) 파일 분류 — 파일명 키워드 기반
         billing: list[tuple[str, str]] = []
-        ext_orders: list[tuple[str, str]] = []     # BTOB 박스 검증 (.xls 일반)
-        bundle_btoc: list[tuple[str, str]] = []    # BTOC 번들 검증 (.xls "번들작업")
+        ext_orders: list[tuple[str, str]] = []     # BTOB 박스 검증 (.xls "BTOB출고비")
+        bundle_btoc: list[tuple[str, str]] = []    # BTOC 번들 검증 (.xls "BTOC번들작업")
         bundle_btob: list[tuple[str, str]] = []    # BTOB 번들 검증 (.xlsx "재고이동")
         for name, p in tmp_files:
             low = name.lower()
@@ -83,9 +83,12 @@ with st.sidebar:
                 else:
                     billing.append((name, p))
             elif low.endswith(".xls"):
-                if "번들작업" in name:
+                if "btoc번들작업" in low:
                     bundle_btoc.append((name, p))
+                elif "btob출고비" in low:
+                    ext_orders.append((name, p))
                 else:
+                    # 키워드 미표기 확장주문검색 → 기본 BTOB 박스로 처리
                     ext_orders.append((name, p))
 
         # 3) 청구마감 적재 — 검수 파일들이 함께 있으면 페어링
