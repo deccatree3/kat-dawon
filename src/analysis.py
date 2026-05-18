@@ -423,6 +423,10 @@ _ORDER_LINKED = {
 # fluctuation 때문에 알람이 잘못 뜨는 케이스). 대신 시트 직접 검증 룰로 대체.
 _UNIT_VARIES = {"택배착불"}
 
+# raw 재계산이 판단의 절대 기준인 항목 — 비교표 '판단'을 전월대비 룰 대신
+# 항상 우리(raw) 계산값으로 덮어씀. 테이블 수치는 원본 billing 값 그대로 유지.
+_AUTHORITATIVE_AUDITS = {"번들작업 청구", "BTOB 박스 청구"}
+
 # 항목명 표시용 매핑 — (구분, 원본명)을 등장 순서대로 적용
 # (DB의 원본 item_name은 보존, 대시보드 표시 시점에만 치환)
 # 같은 (구분, 원본명)이 두 번 나오면 룰도 두 번 (예: 조업비/PLT = BTOB 출고비, 입고비)
@@ -648,9 +652,14 @@ def summary_with_comparison(
         r_idx = c.get("row_index") or p.get("row_index") or 0
 
         sev, judg = _judge_row(name, p_qty, c_qty, p_unit, c_unit, p_amt, c_amt, btoc_rate)
-        # 시트 audit 결과 병합 — 더 심각한 등급이면 덮어쓰고 audit 메시지를 그대로 사용
+        # 시트 audit 결과 병합
         a = audit_by_cell.get(f"G{r_idx}")
-        if a and _SEV_ORDER.get(a.severity, 9) < _SEV_ORDER.get(sev, 9):
+        if a and a.name in _AUTHORITATIVE_AUDITS:
+            # 번들작업·BTOB박스: raw 재계산이 곧 판단 기준 — 전월대비 룰 무시하고 항상 우리 계산값 표시
+            sev = a.severity
+            judg = a.verdict_short or a.description
+        elif a and _SEV_ORDER.get(a.severity, 9) < _SEV_ORDER.get(sev, 9):
+            # 그 외 시트 audit은 더 심각한 등급일 때만 덮어씀
             sev = a.severity
             judg = a.description
         display = _RENAME_LOOKUP.get((cat, name, occ), name)
@@ -684,6 +693,7 @@ class SheetAudit:
     expected: Optional[float] = None
     actual: Optional[float] = None
     target_cell: Optional[str] = None  # 같은 셀 묶어서 표시하기 위함 (예: 'G34')
+    verdict_short: Optional[str] = None  # 비교표 '판단' 칸용 한 줄 요약 (raw 재계산 항목)
 
 
 def audit_sheets(conn: sqlite3.Connection, doc_id: int) -> list[SheetAudit]:
@@ -952,6 +962,10 @@ def audit_sheets(conn: sqlite3.Connection, doc_id: int) -> list[SheetAudit]:
                 expected=expected_amt,
                 actual=actual_amt,
                 target_cell=cell_amt,
+                verdict_short=(
+                    f"{amt_diff:+,.0f}원 {verdict} — 정상(raw) {true_qty:.0f}건×"
+                    f"{unit:,.0f} = {expected_amt:,.0f}원 / 요약 청구 {actual_amt:,.0f}원"
+                ),
             ))
         elif abs(formula_diff) >= 0.5:
             # 전체 청구는 정상 추정과 거의 일치하지만 시트합과 요약이 다른 경우 (드문 케이스)
@@ -967,6 +981,10 @@ def audit_sheets(conn: sqlite3.Connection, doc_id: int) -> list[SheetAudit]:
                 expected=expected_amt,
                 actual=actual_amt,
                 target_cell=cell_amt,
+                verdict_short=(
+                    f"수식 오참조 의심 — 청구마감 시트합 {sheet_sum:.0f}건 vs "
+                    f"요약 청구 {billed_qty:.0f}건 (차이 {formula_diff:+.0f})"
+                ),
             ))
         else:
             audits.append(SheetAudit(
@@ -978,6 +996,10 @@ def audit_sheets(conn: sqlite3.Connection, doc_id: int) -> list[SheetAudit]:
                 expected=expected_amt,
                 actual=actual_amt,
                 target_cell=cell_amt,
+                verdict_short=(
+                    f"정상 — raw {true_qty:.0f}건 = 요약 청구 {billed_qty:.0f}건 "
+                    f"(정상 청구액 {expected_amt:,.0f}원)"
+                ),
             ))
 
     # BTOB 박스 청구 검증 (네이처: 확장주문검색 + 입수량 마스터 기반 정산 박스수)
@@ -1018,6 +1040,11 @@ def audit_sheets(conn: sqlite3.Connection, doc_id: int) -> list[SheetAudit]:
                 expected=expected_amt,
                 actual=actual_amt,
                 target_cell=amt_cell,
+                verdict_short=(
+                    f"{amt_diff:+,.0f}원 {verdict} — 정상(raw) {expected_boxes:.0f}박스×"
+                    f"{unit:,.0f} = {expected_amt:,.0f}원 / 요약 청구 "
+                    f"{actual_boxes:.0f}박스 {actual_amt:,.0f}원"
+                ),
             ))
         else:
             audits.append(SheetAudit(
@@ -1029,6 +1056,10 @@ def audit_sheets(conn: sqlite3.Connection, doc_id: int) -> list[SheetAudit]:
                 expected=expected_amt,
                 actual=actual_amt,
                 target_cell=amt_cell,
+                verdict_short=(
+                    f"정상 — raw {expected_boxes:.0f}박스 = 요약 청구 {actual_boxes:.0f}박스 "
+                    f"(정상 청구액 {expected_amt:,.0f}원)"
+                ),
             ))
 
     return audits
