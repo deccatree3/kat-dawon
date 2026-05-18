@@ -7,7 +7,13 @@
       "Bash(taskkill //F //IM python.exe)",
       "Bash(python3 -c \"import streamlit, plotly; print\\('streamlit', streamlit.__version__\\); print\\('plotly', plotly.__version__\\)\")",
       "Bash(rm -f data/billing.db)",
-      "Bash(where gh:*)"
+      "Bash(where gh:*)",
+      "Bash(python:*)",
+      "Read(//c/Users/decca/AppData/Local/Temp/claude/C--claude-kat-dawon/e2a82391-6e46-422c-8581-66067277089e/tasks/**)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\" http://localhost:8501)",
+      "Bash(powershell *)",
+      "Bash(git checkout *)",
+      "Bash(git add *)"
     ]
   }
 }

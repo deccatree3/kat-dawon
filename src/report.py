@@ -6,7 +6,13 @@ import sqlite3
 
 import pandas as pd
 
-from .analysis import compare_documents, comparison_dataframe, previous_year_month
+from .analysis import (
+    compare_documents,
+    comparison_dataframe,
+    detect_anomalies,
+    previous_year_month,
+    storage_comparison,
+)
 from .db import get_document, get_issues, get_items
 
 
@@ -86,6 +92,48 @@ def build_report_bytes(conn: sqlite3.Connection, doc_id: int) -> bytes:
     _, _, rows = compare_documents(conn, doc["company"], doc["year_month"])
     compare_df = comparison_dataframe(rows)
 
+    # 이상 항목
+    anomalies = detect_anomalies(conn, doc["company"], doc["year_month"])
+    if anomalies:
+        anomaly_df = pd.DataFrame(
+            [
+                {
+                    "구분": a.category,
+                    "심각도": a.severity,
+                    "항목": a.item_name,
+                    "설명": a.description,
+                    "전월": a.prev_value,
+                    "금월": a.curr_value,
+                    "증감": a.diff,
+                }
+                for a in anomalies
+            ]
+        )
+    else:
+        anomaly_df = pd.DataFrame()
+
+    # 보관비 상품별 PLT 분석
+    curr_sum, prev_sum, prod_rows = storage_comparison(conn, doc["company"], doc["year_month"])
+    if prod_rows:
+        storage_df = pd.DataFrame(
+            [
+                {
+                    "상품": r.product_name,
+                    "전월재고": r.prev_qty,
+                    "금월재고": r.curr_qty,
+                    "재고증감": r.qty_diff,
+                    "전월PLT": r.prev_plt,
+                    "금월PLT": r.curr_plt,
+                    "PLT증감": r.plt_diff,
+                    "비고": " | ".join(r.flags) if r.flags else "",
+                }
+                for r in prod_rows
+                if r.plt_diff != 0 or r.flags
+            ]
+        )
+    else:
+        storage_df = pd.DataFrame()
+
     buffer = io.BytesIO()
     with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
         summary_df.to_excel(writer, sheet_name="요약", index=False)
@@ -99,4 +147,8 @@ def build_report_bytes(conn: sqlite3.Connection, doc_id: int) -> bytes:
             )
         if not compare_df.empty:
             compare_df.to_excel(writer, sheet_name="전월대비", index=False)
+        if not anomaly_df.empty:
+            anomaly_df.to_excel(writer, sheet_name="이상항목", index=False)
+        if not storage_df.empty:
+            storage_df.to_excel(writer, sheet_name="보관비분석", index=False)
     return buffer.getvalue()
