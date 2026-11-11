@@ -30,3 +30,6 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+
+# 세션 컨저 아티팩트 (raw trace 제외)
+chat_log/

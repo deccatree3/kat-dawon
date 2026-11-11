@@ -1,0 +1,507 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2026-09_taeyoung_storage_report</title>
+<style>
+:root {
+    --bg: #fbfbfb;
+    --fg: #1f2328;
+    --muted: #57606a;
+    --accent: #0969da;
+    --rule: #d0d7de;
+    --code-bg: #f6f8fa;
+    --quote-border: #d0d7de;
+    --quote-bg: #f6f8fa;
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: "Pretendard Variable", "Pretendard", -apple-system, BlinkMacSystemFont,
+                 "Apple SD Gothic Neo", "Malgun Gothic", "Segoe UI", "Noto Sans KR", sans-serif;
+    font-size: 17px;
+    line-height: 1.85;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+}
+
+main {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 56px 28px 96px;
+}
+
+h1, h2, h3, h4 {
+    font-weight: 700;
+    line-height: 1.35;
+    margin-top: 2em;
+    margin-bottom: 0.6em;
+    letter-spacing: -0.01em;
+}
+
+h1 {
+    font-size: 2.0em;
+    border-bottom: 2px solid var(--rule);
+    padding-bottom: 0.35em;
+    margin-top: 0.2em;
+}
+
+h2 {
+    font-size: 1.55em;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 0.3em;
+}
+
+h3 { font-size: 1.25em; }
+h4 { font-size: 1.08em; color: var(--muted); }
+
+p { margin: 0.9em 0; }
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+ul, ol { padding-left: 1.6em; margin: 0.7em 0; }
+li { margin: 0.35em 0; }
+
+li > ul, li > ol { margin: 0.25em 0; }
+
+blockquote {
+    margin: 1em 0;
+    padding: 0.6em 1em;
+    border-left: 4px solid var(--quote-border);
+    background: var(--quote-bg);
+    color: var(--muted);
+    border-radius: 0 6px 6px 0;
+}
+
+blockquote p { margin: 0.3em 0; }
+
+code {
+    font-family: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, "Liberation Mono", monospace;
+    font-size: 0.92em;
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+pre {
+    background: var(--code-bg);
+    padding: 14px 18px;
+    border-radius: 8px;
+    overflow-x: auto;
+    line-height: 1.55;
+}
+
+pre code {
+    background: transparent;
+    padding: 0;
+    font-size: 0.9em;
+}
+
+hr {
+    border: none;
+    border-top: 1px solid var(--rule);
+    margin: 2em 0;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+    font-size: 0.95em;
+}
+
+th, td {
+    border: 1px solid var(--rule);
+    padding: 8px 12px;
+    text-align: left;
+    vertical-align: top;
+}
+
+th { background: var(--code-bg); font-weight: 600; }
+
+strong { color: #0a0a0a; }
+
+h2:first-of-type { margin-top: 0.5em; }
+
+@media print {
+    body { font-size: 12pt; background: white; }
+    main { padding: 0; max-width: none; }
+}
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #0d1117;
+        --fg: #e6edf3;
+        --muted: #8b949e;
+        --accent: #58a6ff;
+        --rule: #30363d;
+        --code-bg: #161b22;
+        --quote-border: #30363d;
+        --quote-bg: #161b22;
+    }
+    strong { color: #f0f6fc; }
+}
+</style>
+</head>
+<body>
+<main>
+<h1 id="2026-9">2026년 9월 보관비 검토 보고서 — 네이처뉴트리션 / 태영종합물류 용인지사</h1>
+<ul>
+<li>대상 파일: <code>2026년 09월 물류대행비용청구 - 네이처뉴트리션.xlsx</code> → <code>보관내역</code> 시트 (행 번호는 태영 원본 기준)</li>
+<li>청구: <strong>88 PLT × 18,000원 = 1,584,000원</strong> (상품 75 [L54] + 부자재 13 [L55] = 88 [L56])</li>
+<li>작성: 2026-10-23 / <strong>개정: 2026-10-29</strong> (입고 기록 21종 반영, 재고 기준 가용재고 → 현재고)</li>
+</ul>
+<hr />
+<h2 id="1">1. 결론</h2>
+<table>
+<thead>
+<tr>
+<th>구분</th>
+<th>PLT</th>
+<th>월 금액</th>
+<th>조치</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>① 즉시 클레임 — 입고 적재보다 많이 잡힌 팔레트</td>
+<td><strong>4</strong></td>
+<td><strong>72,000원</strong></td>
+<td>정정 요청</td>
+</tr>
+<tr>
+<td>② 협의 후 클레임 — 같은 제품 로트 통합</td>
+<td>6</td>
+<td>108,000원</td>
+<td>로트 혼적 운영 합의 → 합의 시 정정</td>
+</tr>
+<tr>
+<td>③ 개선 요청 — 저적재 팔레트 합적 (제품 간)</td>
+<td>약 6 (+선반 이관 2)</td>
+<td>약 108,000~144,000원</td>
+<td>소량 합적 기준 합의, 로케이션 데이터 확보 후 판단</td>
+</tr>
+<tr>
+<td>④ 문제 없음 — 부자재</td>
+<td>0</td>
+<td>—</td>
+<td>자체 추정상 과다 아님</td>
+</tr>
+<tr>
+<td><strong>합계 (최대)</strong></td>
+<td><strong>약 16~18</strong></td>
+<td><strong>약 29~32만 원/월</strong></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>제품(마스터 있음) 청구 71 vs 적정 63 → <strong>순 +8 PLT (144,000원)</strong>. 과다 10(①4 + ②6), 부족 2(트라이탄보틀·슈퍼프레쉬티)</li>
+<li>9월은 태영 보관내역을 처음 받은 달이다. 그래서 <strong>기준선 확정 + 운영 기준 합의</strong>가 핵심이다.</li>
+<li>즉시 금액 클레임은 ①만 한다. ②③은 다음 달부터 적용할 기준으로 합의하는 것을 권장한다.</li>
+</ul>
+<h3 id="1029">10/29 개정 내용</h3>
+<ul>
+<li><strong>재고 기준을 현재고(G)로 변경했다.</strong> 가용재고(W)는 18행에서 현재고보다 크다. 데일리키토는 W 4,800 = 입고 수량인데, G 4,298 = 4,800 − 9월 택배 출고 501이다. W는 출고가 반영되지 않은 값으로 보인다. 작업중재고(U)·출고예정(V)은 전 행 0이다. 태영 L열(PLT)도 G 기준 계산과 40행 중 39행이 일치한다(W 기준은 38행).</li>
+<li><strong>입고 적재 기록 21종을 반영했다</strong> (<code>taeyoung_storage.md</code> 3장).</li>
+<li>입고 PLT가 2장 이상인 품목은 카톤 기준(여분 제외) 입고 적재를 1PLT 적재량으로 쓴다.</li>
+<li>1장으로 입고된 품목(MOQ, 꽉 차지 않음)은 태영 K를 쓴다.</li>
+<li>미출고 로트는 입고 PLT와 직접 대조한다.</li>
+<li>결과: ①이 2 → 4 PLT로 늘었다. 맥주효모환 11행은 ②에서 이동했고, 닥터키토 2행이 신규로 들어왔다.</li>
+</ul>
+<h2 id="2">2. 검토 기준 (확정)</h2>
+<table>
+<thead>
+<tr>
+<th>항목</th>
+<th>기준</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PLT 측정</td>
+<td>월말 기준</td>
+</tr>
+<tr>
+<td>재고 수량</td>
+<td><strong>현재고(G열)</strong>. 반품존 행은 0 PLT로 다른 곳에 얹혀 있어 SKU 합산에서 제외</td>
+</tr>
+<tr>
+<td>1PLT 적재량</td>
+<td>① 생산 입고 시 실제 적재(카톤 기준, 2장 이상 입고분) → ② 태영 <code>파렛트당 수량(K열)</code> → ③ 20카톤 = 1PLT / 부자재는 발주 MOQ</td>
+</tr>
+<tr>
+<td>적정 PLT</td>
+<td>제품별(로트 합산) 현재고 ÷ 1PLT 적재량 → 올림. 미출고 로트는 입고 PLT 수</td>
+</tr>
+<tr>
+<td>클레임 원칙</td>
+<td><strong>우리가 비용 손해 보는 경우만 우선 클레임.</strong> 태영이 적재량을 더 크게 잡은 것은 문제 삼지 않음</td>
+</tr>
+<tr>
+<td>소량 팔레트</td>
+<td>0 PLT 로트가 다른 로트 팔레트에 얹히는 구조라 행 단위 "소량인데 1PLT" 클레임은 하지 않음 → 제품 합산 후 판단</td>
+</tr>
+</tbody>
+</table>
+<h2 id="3">3. 상세 — 보관내역 시트 행 기준</h2>
+<h3 id="1-2-3-1-4-plt">① 즉시 클레임: 방탄커피 2종 3행 + 맥주효모환 1행 (+4 PLT)</h3>
+<p><strong>방탄커피</strong>: 태영 <code>파렛트당 박스 수량(J열)</code>이 실제 입고 때 적재보다 작게 잡혔다. 그래서 같은 수량에 팔레트가 더 산정됐다.</p>
+<table>
+<thead>
+<tr>
+<th>행</th>
+<th>제품 / 로트</th>
+<th>현재고</th>
+<th>J열(태영)</th>
+<th>입고 시 실제</th>
+<th>태영 PLT(L열)</th>
+<th>입고 기준 PLT</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>8</strong></td>
+<td>데일리키토 방탄커피(14포) / 20280713</td>
+<td>4,298</td>
+<td>48박스 (960개)</td>
+<td><strong>60박스 (1,200개)</strong> — 4,800개 4PLT 입고</td>
+<td>5</td>
+<td><strong>4</strong></td>
+</tr>
+<tr>
+<td><strong>3</strong></td>
+<td>닥터키토 방탄커피(10포) / 20280713</td>
+<td>2,496</td>
+<td>24박스 (1,152개)</td>
+<td><strong>26박스 (1,248개)</strong> — 2,496개 2PLT 입고</td>
+<td>3</td>
+<td><strong>2</strong></td>
+</tr>
+<tr>
+<td><strong>2</strong></td>
+<td>닥터키토 방탄커피(10포) / 20280628</td>
+<td>1,245</td>
+<td>24박스 (1,152개)</td>
+<td><strong>26박스 (1,248개)</strong></td>
+<td>2</td>
+<td><strong>1</strong></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>8행: 입고 4,800개가 9월 출고로 현재고 4,298개로 <strong>줄었는데</strong>, 팔레트는 입고 때 4장에서 5장으로 늘었다.</li>
+<li>3행: 입고 수량 2,496개가 <strong>그대로(미출고)인데</strong>, 입고 때 2장에서 3장으로 늘었다.</li>
+<li>2행: 현재고 1,245개는 입고 적재 1장분(1,248개)보다 적다. J열이 26이면 1장이다. 태영 K 1,152로 나눠서 2장이 됐다.</li>
+</ul>
+<p><strong>11행 퍼펙토 프리미엄 독일 맥주효모환 / 20280913</strong><br />
+- 현재고 6,080 = <strong>입고 실제수량 그대로(미출고)</strong>. 입고 때 60카톤(6,000) + 여분 80개가 <strong>3 PLT</strong>로 들어왔다.<br />
+- 태영은 6,080 ÷ K 2,000 = 3.04 → <strong>4 PLT</strong>로 청구했다. 여분 80개 때문에 팔레트가 1장 늘었다.</p>
+<p>요청: 닥터키토·데일리키토 J열 정정(24→26, 48→60), 맥주효모환 11행 입고분 3 PLT 인정 → <strong>9월 4 PLT 정정</strong></p>
+<h3 id="2-6-plt">② 협의 후 클레임: 로트 분리 (+6 PLT)</h3>
+<p>같은 제품인데 로트별로 팔레트를 따로 써서 자투리 팔레트가 생겼다. 로트를 합치면 1장씩 줄어든다.</p>
+<table>
+<thead>
+<tr>
+<th>행</th>
+<th>제품</th>
+<th>로트별 현재고 → L열 PLT</th>
+<th>합계</th>
+<th>1PLT</th>
+<th>합치면</th>
+<th>차이</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>52·53</td>
+<td>발효 흑마늘 아르기닌</td>
+<td>53→1 / 400→1</td>
+<td>453</td>
+<td>2,880</td>
+<td>1</td>
+<td>+1</td>
+</tr>
+<tr>
+<td>46·47</td>
+<td>글루타치온 콜라겐C</td>
+<td>221→1 / 1,120→1</td>
+<td>1,341</td>
+<td>2,880</td>
+<td>1</td>
+<td>+1</td>
+</tr>
+<tr>
+<td>31·32</td>
+<td>낙산균 루테리 가세리</td>
+<td>2,980→3 / 160→1</td>
+<td>3,140</td>
+<td>1,200</td>
+<td>3</td>
+<td>+1</td>
+</tr>
+<tr>
+<td>43·44</td>
+<td>산양유 초유 락토페린</td>
+<td>3,653→4 / 600→1</td>
+<td>4,253</td>
+<td>1,200</td>
+<td>4</td>
+<td>+1</td>
+</tr>
+<tr>
+<td>28·29</td>
+<td>펌킨펌킨티</td>
+<td>360→1 / 2,000→2</td>
+<td>2,360</td>
+<td>1,600</td>
+<td>2</td>
+<td>+1</td>
+</tr>
+<tr>
+<td>5·6·7</td>
+<td>슈링티</td>
+<td>189→0 / 300→1 / 1,700→2</td>
+<td>2,189</td>
+<td>1,600</td>
+<td>2</td>
+<td>+1</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>태영도 이미 일부 로트는 0 PLT로 다른 로트 팔레트에 얹고 있다(5·15·17·36·51행). 로트 혼적이 현장에서 불가능하지 않다는 근거다.</li>
+<li>우리 입장: 로트 혼적 허용. 단 현장 운영(선입선출·피킹 오류 방지) 의견을 먼저 확인한다.</li>
+<li>글루타치온 등 0.5팔레트 입고 품목의 입고 적재량 960은 적재 한계가 아니다(MOQ 1장 입고, 꽉 차지 않음). 그래서 태영 K 2,880을 적용했다.</li>
+</ul>
+<h3 id="3-6-8-plt">③ 개선 요청: 저적재 팔레트 합적 (약 −6, 선반 이관 포함 최대 −8 PLT)</h3>
+<p>②까지 적용한 뒤에도 <strong>1장짜리 팔레트 적재율이 30% 미만</strong>인 것을 같은 박스 규격끼리 묶었다.</p>
+<table>
+<thead>
+<tr>
+<th>그룹</th>
+<th>행</th>
+<th>제품 (현재고)</th>
+<th>합계 / 1PLT</th>
+<th>합적</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>스키니퓨리티 티 4종 (1PLT 1,600)</td>
+<td>12·14·15·16·17·18</td>
+<td>스키니티 479 · 데일리민트티 161 · 이지데이티 103 · 브라이티 85</td>
+<td>828 / 1,600</td>
+<td><strong>4장 → 1장 (−3)</strong></td>
+</tr>
+<tr>
+<td>퍼펙토 120입 4종 (1PLT 2,880)</td>
+<td>45·48·49·50·51</td>
+<td>류신 709 · 모로오렌지 582 · MBP 379 · 로즈마리 208</td>
+<td>1,878 / 2,880</td>
+<td><strong>4장 → 1장 (−3)</strong></td>
+</tr>
+<tr>
+<td>선반 이관 후보</td>
+<td>36·37 / 33</td>
+<td>산양유 초유 콜라겐(용기) 81 (14%) / 스키니 선물세트(7T*4종) 15 (4%)</td>
+<td>—</td>
+<td>최대 −2</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>참고: 사과초모식초(38행) 771개(27%)도 120입이지만 위 4종과 합치면 2,649개로 1장 한도에 가깝다. 그래서 합적 후보로만 둔다.</li>
+<li>여러 장 쓰는 품목의 마지막 팔레트 적재율이 낮은 경우(초유 단백질 분말 21%, 맥주효모환 24%, 프롤린 스틱 25%)는 다른 팔레트와 섞기 어려워 제외했다.</li>
+<li>실제 팔레트 구성(로케이션)을 모르므로 클레임이 아닌 <strong>운영 기준 합의</strong>로 접근한다. 보관내역의 <code>로케이션 명/코드</code> 열(R·S열)이 비어 있어 채워서 받기를 요청한다.</li>
+</ul>
+<h3 id="4-13-plt-55">④ 부자재 13 PLT (55행) — 과다 아님 (내부 판단)</h3>
+<ul>
+<li>근거: 자체 부자재현황(10/1) ÷ 발주 MOQ(=1PLT) → 번들박스 9종 19 PLT + 6개입 지함 1 = 적정 약 20 &gt; 청구 13</li>
+<li>보관내역 33~36행(3개입 지함·쇼핑백 4 PLT)은 마스터(I·J·K열)가 없어 판단 보류, 그대로 인정. 35행(스키니 쇼핑백 1 PLT)은 적재율 98%로 적정</li>
+<li>별도 이슈: <strong>네이처 1호 15,638개 실사 필요</strong> (1회 발주 1~2PLT인데 1만 개 초과, 6/12 1,100 → 7/14 15,871 급증)</li>
+</ul>
+<h3 id="_1">참고: 우리 계산상 적게 잡힌 행 (태영 상계 주장 대비)</h3>
+<table>
+<thead>
+<tr>
+<th>행</th>
+<th>제품</th>
+<th>현재고</th>
+<th>1PLT</th>
+<th>L열</th>
+<th>계산상</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>34</td>
+<td>트라이탄보틀</td>
+<td>2,802</td>
+<td>1,400</td>
+<td>2</td>
+<td>3 (2.001)</td>
+</tr>
+<tr>
+<td>13</td>
+<td>슈퍼프레쉬티</td>
+<td>5</td>
+<td>1,600</td>
+<td>0</td>
+<td>다른 팔레트에 얹힘</td>
+</tr>
+<tr>
+<td>4</td>
+<td>반품존 닥터키토</td>
+<td>9</td>
+<td>—</td>
+<td>0</td>
+<td>반품존, 합산 제외</td>
+</tr>
+</tbody>
+</table>
+<p>둘 다 반올림 경계이거나 소량이라 실질 상계 근거로 약하다. 먼저 꺼낼 필요 없다. (가용재고 기준일 때 부족이던 포스트바이오틱스 스틱 23행은 현재고 5,869 → 5 PLT로 적정)</p>
+<h2 id="4">4. 태영 확인 요청 사항</h2>
+<ol>
+<li>2·3·8행 J열(파렛트당 박스) 정정, 11행 맥주효모환 입고분 3 PLT 인정 → 9월 4 PLT 정정</li>
+<li>로트 혼적 운영 방식 — 같은 제품 다른 로트 합적 가능 여부</li>
+<li>소량 팔레트 합적 / 선반 이관 기준 (예: 적재율 30% 미만)</li>
+<li>월말 기준 <strong>로케이션 코드가 채워진 재고 현황</strong> (R·S열) 제공</li>
+<li>가용재고(W)가 현재고(G)보다 큰 행 18건의 사유. 작업중재고(U)·출고예정(V)이 전 행 0이다. 예: 8행 데일리키토 G 4,298 / W 4,800, 차이 502 ≈ 9월 출고 501. 파렛트 수량(L열) 산정 기준 수량도 함께 확인</li>
+<li>박스입수(I열) 확인 — 24행 4in1 콜라겐 110 (당사 60, 입고 6,000개 = 60입 × 100카톤 확인), 25행 59 발효효소 60 (당사 50), 22·27행 프롤린 용기 56 (당사 50), 33행 스키니 선물세트 50 (당사 48)</li>
+<li>(부자재) 네이처 1호 재고 실사</li>
+</ol>
+<h2 id="5-10">5. 다음 달(10월분)부터</h2>
+<ul>
+<li>9월 결과를 기준선으로 <strong>전월 대비 분석</strong>을 추가한다: 제품별 현재고 증감 vs PLT 증감, J열 변경 여부, 신규 로트 PLT</li>
+<li>입고 적재 기록이 들어오는 대로 <code>reference/taeyoung_storage.md</code> 3장에 누적한다 → ①유형 클레임 근거 확대</li>
+</ul>
+<hr />
+<h2 id="_2">부록: 태영 전달 문안 (초안)</h2>
+<blockquote>
+<p>안녕하세요, 네이처뉴트리션입니다. 9월 보관비 청구 내역(보관내역 시트) 검토 결과 아래 확인 부탁드립니다.</p>
+<p><strong>1. 파렛트 수량 정정 요청 (4 PLT)</strong><br />
+- 8행 데일리키토 방탄커피(14포), 로트 20280713: 4,800개(240카톤)가 입고 시 4파렛트(파렛트당 60카톤)로 입고되었습니다. 이후 출고로 현재고가 4,298개로 줄었는데도 5 PLT로 산정되어 있습니다. 파렛트당 박스 수량(J열)이 48로 되어 있어 60으로 정정 부탁드립니다.<br />
+- 3행 닥터키토 방탄커피(10포), 로트 20280713: 2,496개(52카톤)가 입고 시 2파렛트로 입고되었고 출고 없이 그대로인데 3 PLT로 산정되어 있습니다. J열 24 → 26 정정 부탁드립니다.<br />
+- 2행 닥터키토 방탄커피(10포), 로트 20280628: 현재고 1,245개로 1파렛트 적재량(26카톤, 1,248개) 이내인데 2 PLT로 산정되어 있습니다. J열 정정 시 1 PLT입니다.<br />
+- 11행 퍼펙토 프리미엄 독일 맥주효모환, 로트 20280913: 6,080개(60카톤 + 여분 80개)가 입고 시 3파렛트로 입고되었고 출고 없이 그대로인데 4 PLT로 산정되어 있습니다. 3 PLT로 정정 부탁드립니다.</p>
+<p><strong>2. 로트 통합 보관 가능 여부</strong><br />
+같은 제품의 로트별로 파렛트가 나뉘어 자투리 파렛트가 생기는 경우가 있습니다(52·53행 흑마늘 아르기닌 53개/400개 각 1 PLT, 46·47행 글루타치온 221개/1,120개 각 1 PLT 등 6건). 당사는 로트 혼적 보관에 문제가 없으니 현장 운영상 가능하신지 의견 부탁드립니다. 일부 로트는 이미 0 PLT로 함께 보관 중인 것으로 보입니다(5·15·17·36·51행).</p>
+<p><strong>3. 소량 파렛트 합적 기준</strong><br />
+적재율이 낮은 파렛트가 있습니다(예: 14행 브라이티 85개, 17·18행 이지데이티 103개, 49행 로즈마리 208개, 36·37행 산양유 콜라겐 81개 — 각 1 PLT). 같은 규격 제품끼리 합적하거나 선반 보관으로 전환하는 기준을 협의드리고 싶습니다.</p>
+<p><strong>4. 자료 요청 / 확인</strong><br />
+- 월말 기준 로케이션 코드가 포함된 재고 현황 (보관내역 R·S열)<br />
+- 가용재고(W열)가 현재고(G열)보다 큰 행이 18건 있습니다. 작업중재고(U열)는 전 행 0입니다. 예) 8행 데일리키토 현재고 4,298 / 가용재고 4,800 — 차이 502개가 9월 해당 상품 출고량(501개)과 거의 같습니다. 출고분이 가용재고에 반영되지 않은 것인지, 파렛트 수량은 어느 수량 기준으로 산정하시는지 확인 부탁드립니다.<br />
+- 박스입수(I열) 확인: 24행 4in1 콜라겐(110 → 당사 기준 60), 25·22·27·33행</p>
+</blockquote>
+</main>
+</body>
+</html>
